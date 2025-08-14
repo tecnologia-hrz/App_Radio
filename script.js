@@ -61,14 +61,23 @@ function togglePlay() {
         status.textContent = 'Detenido';
         nowPlaying.textContent = 'Presiona play para escuchar';
         isPlaying = false;
+        
+        // Detener animación periódica cuando se pausa
+        detenerAnimacionPeriodica();
     } else {
         currentStreamIndex = 0;
-        tryNextStream().catch(error => {
+        tryNextStream().then(() => {
+            // Iniciar animación periódica cuando se reproduce exitosamente
+            iniciarAnimacionPeriodica();
+        }).catch(error => {
             console.error('Error al reproducir:', error);
             status.textContent = 'Error: No se pudo conectar a ningún stream';
             nowPlaying.textContent = 'Verifica tu conexión a internet';
             playIcon.innerHTML = '<path d="M8 5v14l11-7z"/>';
             playBtn.classList.remove('playing');
+            
+            // Asegurar que no se inicie la animación si hay error
+            detenerAnimacionPeriodica();
         });
     }
 }
@@ -113,6 +122,62 @@ function updateNowPlaying() {
 
 // Actualizar cada 30 segundos
 setInterval(updateNowPlaying, 30000);
+
+// Función para abrir WhatsApp y pedir canción
+function abrirWhatsAppPedirCancion() {
+    const numeroWhatsApp = '573028461162'; // Número sin el +
+    const mensaje = 'Hola Puerto Celestial! 🎵 Me gustaría pedir una canción para la radio.';
+    const urlWhatsApp = `https://wa.me/${numeroWhatsApp}?text=${encodeURIComponent(mensaje)}`;
+    
+    // Abrir WhatsApp en una nueva ventana
+    window.open(urlWhatsApp, '_blank');
+}
+
+// Función para mostrar la animación flotante
+function mostrarAnimacionFlotante() {
+    const animacion = document.getElementById('floatingRequestAnimation');
+    animacion.classList.add('show');
+    
+    // Ocultar automáticamente después de 8 segundos
+    setTimeout(() => {
+        if (animacion.classList.contains('show')) {
+            animacion.classList.remove('show');
+        }
+    }, 8000);
+}
+
+// Función para cerrar la animación flotante
+function cerrarAnimacionFlotante() {
+    const animacion = document.getElementById('floatingRequestAnimation');
+    animacion.classList.remove('show');
+}
+
+// Mostrar la animación cada 2 minutos (120000 ms) cuando la radio esté reproduciendo
+let animacionInterval;
+
+function iniciarAnimacionPeriodica() {
+    // Limpiar intervalo anterior si existe
+    if (animacionInterval) {
+        clearInterval(animacionInterval);
+    }
+    
+    // Mostrar primera animación después de 30 segundos
+    setTimeout(mostrarAnimacionFlotante, 30000);
+    
+    // Luego mostrar cada 2 minutos
+    animacionInterval = setInterval(mostrarAnimacionFlotante, 120000);
+}
+
+function detenerAnimacionPeriodica() {
+    if (animacionInterval) {
+        clearInterval(animacionInterval);
+        animacionInterval = null;
+    }
+    
+    // Ocultar animación si está visible
+    const animacion = document.getElementById('floatingRequestAnimation');
+    animacion.classList.remove('show');
+}
 
 // Funciones para navegación por pestañas
 function switchTab(tabName) {
